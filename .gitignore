@@ -1,3 +1,6 @@
+*_cache
+*_files
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
