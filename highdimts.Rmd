@@ -10,10 +10,10 @@ output:
     highlight: tango
     incremental: no
     keep_tex: yes
+    colortheme: monashblue
     toc: yes
     includes:
       in_header: preamble.tex
-colortheme: monashblue
 ---
 
 ```{r setup, include=FALSE}
@@ -407,6 +407,172 @@ For other analyses, it may be appropriate to have different requirements.
 \textbf{github.com/robjhyndman/tsfeatures}
 \end{alertblock}
 
+# Anomaly detection
+
+## Yahoo server metrics
+\fontsize{13}{15}\sf\vspace*{-0.2cm}
+
+  * Tens of thousands of time series collected at one-hour intervals over 1--2 months.
+  * Consisting of several server metrics (e.g. CPU usage and paging views) from many server farms globally.
+  * Aim: find unusual (anomalous) time series.
+
+\placefig{0}{4.6}{width=13.7cm, trim=0 20 0 220, clip=TRUE}{serverfarm}
+\vspace*{10cm}
+
+## Yahoo server metrics
+\vspace*{0.2cm}\par
+
+```{r yahoodata}
+k <- sample(NCOL(dat0), 10)
+savepdf("yahoodata1", width = 15, height = 12)
+p <- autoplot(dat0[, k], facet = TRUE) + xlab("Days") + ylab("")
+print(p)
+endpdf()
+k <- sample(NCOL(dat1), 10)
+savepdf("yahoodata2", width = 15, height = 12)
+p <- autoplot(dat1[, k], facet = TRUE) + xlab("Days") + ylab("")
+print(p)
+endpdf()
+k <- sample(NCOL(dat2), 10)
+savepdf("yahoodata3", width = 15, height = 12)
+p <- autoplot(dat2[, k], facet = TRUE) + xlab("Days") + ylab("")
+print(p)
+endpdf()
+```
+
+
+\only<1>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
+clip=true,trim=40 0 0 0]{yahoodata1}}}
+\only<2>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
+clip=true,trim=40 0 0 0]{yahoodata2}}}
+\only<3>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
+clip=true,trim=40 0 0 0]{yahoodata3}}}
+
+## Yahoo server metrics
+\fontsize{11}{11.8}\sf\vspace*{-0.2cm}
+
+* **ACF1**: first order autocorrelation = $\text{Corr}(Y_t,Y_{t-1})$
+* Strength of **trend** and **seasonality** based on STL
+* Size of seasonal **peak** and **trough**
+* Spectral **entropy**
+* **Lumpiness**: variance of block variances (block size 24).
+* **Spikiness**: variances of leave-one-out variances of STL remainders.
+* **Level shift**: Maximum difference in trimmed means of consecutive moving windows of size 24.
+* **Variance change**: Max difference in variances of consecutive moving windows of size 24.
+* **Flat spots**: Discretize sample space into 10 equal-sized intervals. Find max run length in any interval.
+* Number of **crossing points** of mean line.
+ * **Kullback-Leibler score**:
+      Maximum of $D_{KL}(P\|Q) = \int P(x)\ln P(x)/ Q(x) dx$
+       where $P$ and $Q$ are estimated by kernel density estimators applied to
+       consecutive windows of size 48.
+* **Change index**: Time of maximum KL score
+
+## Feature space
+\fontsize{11}{11}\sf
+
+```{r yahoo, fig.height=4, fig.width=4}
+yahoo <- cbind(dat0, dat1, dat2, dat3)
+hwl <- bind_cols(
+  tsfeatures(
+    yahoo,
+    c(
+      "acf_features", "entropy", "lumpiness",
+      "flat_spots", "crossing_points"
+    )
+  ),
+  tsfeatures(yahoo, "stl_features", s.window = "periodic", robust = TRUE),
+  tsfeatures(yahoo, "max_kl_shift", width = 48),
+  tsfeatures(yahoo,
+    c("mean", "var"),
+    scale = FALSE, na.rm = TRUE
+  ),
+  tsfeatures(yahoo,
+    c("max_level_shift", "max_var_shift"),
+    trim = TRUE
+  )
+) %>%
+  select(
+    mean, var, x_acf1, trend,
+    seasonal_strength, peak, trough,
+    entropy, lumpiness, spike, max_level_shift, max_var_shift, flat_spots,
+    crossing_points, max_kl_shift, time_kl_shift
+  )
+```
+
+```{r yahoo2, dependson="yahoo"}
+pc <- prcomp(na.omit(hwl), scale = TRUE)$x %>%
+  as_tibble()
+p <- ggplot(pc, aes(x = PC1, y = PC2)) +
+  coord_equal(ratio = 1) +
+  geom_point()
+savepdf("YahooFeatureSpace", height = 13, width = 13)
+print(p)
+endpdf()
+```
+
+
+\vspace*{-0.2cm}
+
+\includegraphics[width=5.8cm]{YahooFeatureSpace}
+
+
+## Feature space
+
+```{r yahoobiplot, fig.width=5, fig.height=6}
+prcomp(na.omit(hwl), scale = TRUE) %>%
+  ggbiplot(alpha = 0.2, scale = 0) +
+  coord_equal(ratio = 1)
+```
+
+\only<2>{\begin{textblock}{4}(8,3)\fontsize{11}{11}\sf
+\begin{alertblock}{\fontsize{11}{11}\sffamily What is ``anomalous''?}
+\begin{itemize}\tightlist
+\item We need a measure of the ``anomalousness'' of a time series.
+\item Rank points based on their local density using a bivariate kernel density estimate.
+\end{itemize}
+\end{alertblock}
+\end{textblock}}
+
+
+## Finding weird time series
+\fontsize{10}{10}\sf
+
+```{r hdryahoo, dependson="yahoo", fig.height=4, fig.width=6.66}
+library(hdrcde)
+savepdf("HDRYahoo", width = 13, height = 13)
+hdrscatterplot(pc[, 1], pc[, 2], noutliers = 5) + coord_equal(ratio = 1) +
+  xlab("PC1") + ylab("PC2")
+endpdf()
+```
+
+```r
+hdrcde::hdrscatterplot(pc[,1], pc[,2], noutliers=5)
+```
+
+\vspace*{-0.25cm}
+\includegraphics[width=7.5cm]{HDRYahoo}
+
+\begin{textblock}{4.8}(7.7,6.9)\fontsize{10}{10}\sf
+\begin{alertblock}{\fontsize{10}{10}\sffamily Highest Density Regions}
+\begin{itemize}\tightlist
+\item Estimate using \texttt{hdrcde} package
+\item Highlight outlying points as those with lowest density.
+\end{itemize}
+\end{alertblock}
+\end{textblock}
+
+
+## Packages
+\fontsize{14.5}{18}\sf
+
+ * \alert{hdrcde}: scatterplots with bivariate HDRs. \newline CRAN | \url{github.com/robjhyndman/hdrcde}\vspace*{0.4cm}
+
+ * \alert{stray}: finding outliers in high dimensions. \newline\url{github.com/pridiltal/stray}\vspace*{0.4cm}
+
+ * \alert{oddstream}: finding outliers in streaming data. \newline\url{github.com/pridiltal/oddstream}\vspace*{0.4cm}
+
+ * \alert{anomalous}: yahoo data. \newline\url{github.com/robjhyndman/anomalous}
+
 # Forecasting
 
 ## Forecast model selection
@@ -590,6 +756,7 @@ ggplot(data = df, aes(x = method, y = Rank, fill = factor(class))) +
 1. ETS
 1. TBATS
 1. STLM-AR
+1. NNAR
 
 
 ## R Packages
@@ -598,172 +765,6 @@ ggplot(data = df, aes(x = method, y = Rank, fill = factor(class))) +
  * \alert{seer}: FFORMS --- selecting forecasting model using features. \newline\url{github.com/thiyangt/seer}\vspace*{0.5cm}
 
  * \alert{M4metalearning}: FFORMA -- forecast combinations using features to choose weights. \newline\url{github.com/robjhyndman/M4metalearning}
-
-# Anomaly detection
-
-## Yahoo server metrics
-\fontsize{13}{15}\sf\vspace*{-0.2cm}
-
-  * Tens of thousands of time series collected at one-hour intervals over 1--2 months.
-  * Consisting of several server metrics (e.g. CPU usage and paging views) from many server farms globally.
-  * Aim: find unusual (anomalous) time series.
-
-\placefig{0}{4.6}{width=13.7cm, trim=0 20 0 220, clip=TRUE}{serverfarm}
-\vspace*{10cm}
-
-## Yahoo server metrics
-\vspace*{0.2cm}\par
-
-```{r yahoodata}
-k <- sample(NCOL(dat0), 10)
-savepdf("yahoodata1", width = 15, height = 12)
-p <- autoplot(dat0[, k], facet = TRUE) + xlab("Days") + ylab("")
-print(p)
-endpdf()
-k <- sample(NCOL(dat1), 10)
-savepdf("yahoodata2", width = 15, height = 12)
-p <- autoplot(dat1[, k], facet = TRUE) + xlab("Days") + ylab("")
-print(p)
-endpdf()
-k <- sample(NCOL(dat2), 10)
-savepdf("yahoodata3", width = 15, height = 12)
-p <- autoplot(dat2[, k], facet = TRUE) + xlab("Days") + ylab("")
-print(p)
-endpdf()
-```
-
-
-\only<1>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
-clip=true,trim=40 0 0 0]{yahoodata1}}}
-\only<2>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
-clip=true,trim=40 0 0 0]{yahoodata2}}}
-\only<3>{\centerline{\includegraphics[height=8.1cm,width=12.8cm,keepaspectratio=true,
-clip=true,trim=40 0 0 0]{yahoodata3}}}
-
-## Yahoo server metrics
-\fontsize{11}{11.8}\sf\vspace*{-0.2cm}
-
-* **ACF1**: first order autocorrelation = $\text{Corr}(Y_t,Y_{t-1})$
-* Strength of **trend** and **seasonality** based on STL
-* Size of seasonal **peak** and **trough**
-* Spectral **entropy**
-* **Lumpiness**: variance of block variances (block size 24).
-* **Spikiness**: variances of leave-one-out variances of STL remainders.
-* **Level shift**: Maximum difference in trimmed means of consecutive moving windows of size 24.
-* **Variance change**: Max difference in variances of consecutive moving windows of size 24.
-* **Flat spots**: Discretize sample space into 10 equal-sized intervals. Find max run length in any interval.
-* Number of **crossing points** of mean line.
- * **Kullback-Leibler score**:
-      Maximum of $D_{KL}(P\|Q) = \int P(x)\ln P(x)/ Q(x) dx$
-       where $P$ and $Q$ are estimated by kernel density estimators applied to
-       consecutive windows of size 48.
-* **Change index**: Time of maximum KL score
-
-## Feature space
-\fontsize{11}{11}\sf
-
-```{r yahoo, fig.height=4, fig.width=4}
-yahoo <- cbind(dat0, dat1, dat2, dat3)
-hwl <- bind_cols(
-  tsfeatures(
-    yahoo,
-    c(
-      "acf_features", "entropy", "lumpiness",
-      "flat_spots", "crossing_points"
-    )
-  ),
-  tsfeatures(yahoo, "stl_features", s.window = "periodic", robust = TRUE),
-  tsfeatures(yahoo, "max_kl_shift", width = 48),
-  tsfeatures(yahoo,
-    c("mean", "var"),
-    scale = FALSE, na.rm = TRUE
-  ),
-  tsfeatures(yahoo,
-    c("max_level_shift", "max_var_shift"),
-    trim = TRUE
-  )
-) %>%
-  select(
-    mean, var, x_acf1, trend,
-    seasonal_strength, peak, trough,
-    entropy, lumpiness, spike, max_level_shift, max_var_shift, flat_spots,
-    crossing_points, max_kl_shift, time_kl_shift
-  )
-```
-
-```{r yahoo2, dependson="yahoo"}
-pc <- prcomp(na.omit(hwl), scale = TRUE)$x %>%
-  as_tibble()
-p <- ggplot(pc, aes(x = PC1, y = PC2)) +
-  coord_equal(ratio = 1) +
-  geom_point()
-savepdf("YahooFeatureSpace", height = 13, width = 13)
-print(p)
-endpdf()
-```
-
-
-\vspace*{-0.2cm}
-
-\includegraphics[width=5.8cm]{YahooFeatureSpace}
-
-
-## Feature space
-
-```{r yahoobiplot, fig.width=5, fig.height=6}
-prcomp(na.omit(hwl), scale = TRUE) %>%
-  ggbiplot(alpha = 0.2, scale = 0) +
-  coord_equal(ratio = 1)
-```
-
-\only<2>{\begin{textblock}{4}(8,3)\fontsize{11}{11}\sf
-\begin{alertblock}{\fontsize{11}{11}\sffamily What is ``anomalous''?}
-\begin{itemize}\tightlist
-\item We need a measure of the ``anomalousness'' of a time series.
-\item Rank points based on their local density using a bivariate kernel density estimate.
-\end{itemize}
-\end{alertblock}
-\end{textblock}}
-
-
-## Finding weird time series
-\fontsize{10}{10}\sf
-
-```{r hdryahoo, dependson="yahoo", fig.height=4, fig.width=6.66}
-library(hdrcde)
-savepdf("HDRYahoo", width = 13, height = 13)
-hdrscatterplot(pc[, 1], pc[, 2], noutliers = 5) + coord_equal(ratio = 1) +
-  xlab("PC1") + ylab("PC2")
-endpdf()
-```
-
-```r
-hdrcde::hdrscatterplot(pc[,1], pc[,2], noutliers=5)
-```
-
-\vspace*{-0.25cm}
-\includegraphics[width=7.5cm]{HDRYahoo}
-
-\begin{textblock}{4.8}(7.7,6.9)\fontsize{10}{10}\sf
-\begin{alertblock}{\fontsize{10}{10}\sffamily Highest Density Regions}
-\begin{itemize}\tightlist
-\item Estimate using \texttt{hdrcde} package
-\item Highlight outlying points as those with lowest density.
-\end{itemize}
-\end{alertblock}
-\end{textblock}
-
-
-## Packages
-\fontsize{14.5}{18}\sf
-
- * \alert{hdrcde}: scatterplots with bivariate HDRs. \newline CRAN | \url{github.com/robjhyndman/hdrcde}\vspace*{0.4cm}
-
- * \alert{stray}: finding outliers in high dimensions. \newline\url{github.com/pridiltal/stray}\vspace*{0.4cm}
-
- * \alert{oddstream}: finding outliers in streaming data. \newline\url{github.com/pridiltal/oddstream}\vspace*{0.4cm}
-
- * \alert{anomalous}: yahoo data. \newline\url{github.com/robjhyndman/anomalous}
 
 # Forecast reconciliation
 
@@ -892,7 +893,7 @@ A \alert{\textbf{grouped time series}} is a collection of time series that can b
 
 ### The solution
 
-1. Forecast all series at all levels of aggregation using an automatic forecasting algorithm.\newline (e.g., `ets`, `auto.arima`, ...)
+1. Forecast all series at all levels of aggregation using an automatic forecasting algorithm.\newline (e.g., `ets`, `auto.arima`, FFORMA, ...)
 2. Reconcile the resulting forecasts so they add up correctly using least squares optimization (i.e., find closest reconciled forecasts to the original forecasts).
 3. This is available in the \textbf{hts} package in R.
 
@@ -933,10 +934,10 @@ where
 
 \only<2->{\begin{textblock}{6.3}(6,1)\small
 \begin{itemize}\itemsep=0cm\parskip=0cm
-\item[ $ y_{t}: $] observed aggregate of all series at time
+\item[\color{white} $ y_{t}: $] observed aggregate of all series at time
 $t$.
-\item[ $ y_{X,t}: $] observation on series $X$ at time $t$.
-\item[ $ \bm{b}_{t}: $] vector of all series at bottom level
+\item[\color{white} $ y_{X,t}: $] observation on series $X$ at time $t$.
+\item[\color{white} $ \bm{b}_{t}: $] vector of all series at bottom level
 in time $t$.
 \end{itemize}
 \end{textblock}}\vspace*{0.6cm}

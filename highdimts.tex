@@ -190,7 +190,7 @@
       minimum height=2em, text centered]
   \tikzstyle{connector} = [->,thick]
   
-  \setbeamercolor{itemize item}{fg=white}
+  %\setbeamercolor{itemize item}{fg=white}
 
 %% Monash overrides
 \AtBeginSection[]{
@@ -541,176 +541,6 @@ requirements.
 
 \end{frame}
 
-\hypertarget{forecasting}{%
-\section{Forecasting}\label{forecasting}}
-
-\begin{frame}{Forecast model selection}
-\protect\hypertarget{forecast-model-selection}{}
-
-\alert{Features used to select a forecasting model}\vspace*{10cm}
-
-\begin{textblock}{12}(0.1,2.1)\small
-\begin{multicols}{2}
-  \begin{itemize}\tightlist
-    \item length
-    \item strength of seasonality
-    \item strength of trend
-    \item linearity
-    \item curvature
-    \item spikiness
-    \item stability
-    \item lumpiness
-    \item first ACF value of remainder series
-    \item parameter estimates of Holt's linear trend method
-    \item spectral entropy
-    \item Hurst exponent
-    \item nonlinearity
-    \item parameter estimates of Holt-Winters' additive method
-    \item unit root test statistics
-    \item first ACF value of residual series of linear trend model
-    \item ACF and PACF based features - calculated on both the raw and differenced series
-    \end{itemize}
-\end{multicols}
-\end{textblock}
-
-\end{frame}
-
-\begin{frame}{\fontsize{16}{16}\bf\sffamily FFORMS: Feature-based FORecast Model Selection}
-\protect\hypertarget{section}{}
-
-\only<1>{\full{fw1}}
-\only<2>{\full{fw2}}
-\only<3>{\full{fw3}}
-\only<4>{\full{fw4}}
-\only<5>{\full{fw5}}
-\only<6>{\full{fw6}}
-\only<7>{\full{fw7}}
-\only<8>{\full{fw8}}
-\only<9>{\full{fw9}}
-\only<10>{\full{fw10}}
-\only<11>{\full{fw11}}
-\only<12>{\full{fw12}}
-\only<13>{\full{fw13}}
-\only<14>{\full{fw14}}
-
-\vspace*{10cm}
-
-\end{frame}
-
-\begin{frame}{Application to M competition data}
-\protect\hypertarget{application-to-m-competition-data}{}
-
-\begin{block}{Experiment 1}
-\centering\small\tabcolsep=0.1cm
-\begin{tabular}{lrrrrr}
-                 & Source & Y      & Q      & M \\
-\midrule
-Observed series  & M1     & 181    & 203    & 617 \\
-Simulated series &        & 362000 & 406000 & 123400 \\
-New series       & M3     & 645    & 756    & 1428
-\end{tabular}
-\end{block}
-\begin{block}{Experiment 2}
-\centering\small\tabcolsep=0.1cm
-\begin{tabular}{lrrrrr}
-                 & Source & Y       & Q       & M \\
-\midrule
-Observed series  & M3     & 645     & 756     & 1428 \\
-Simulated series &        & 1290000 & 1512000 & 285600 \\
-New series       & M1     & 181     & 203     & 617
-\end{tabular}
-\end{block}
-
-\end{frame}
-
-\begin{frame}{Results: Yearly}
-\protect\hypertarget{results-yearly}{}
-
-\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-1-1.pdf}
-
-\end{frame}
-
-\begin{frame}{Results: Quarterly}
-\protect\hypertarget{results-quarterly}{}
-
-\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-2-1.pdf}
-
-\end{frame}
-
-\begin{frame}{Results: Monthly}
-\protect\hypertarget{results-monthly}{}
-
-\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-3-1.pdf}
-
-\end{frame}
-
-\begin{frame}{\fontsize{15}{15}\sffamily\bfseries FFORMA: Feature-based FORecast Model Averaging}
-\protect\hypertarget{section-1}{}
-
-\begin{itemize}
-\tightlist
-\item
-  Like FFORMS but we use gradient boosted trees rather than a random
-  forest.
-\item
-  The optimization criterion is forecast accuracy not classification
-  accuracy.
-\item
-  The probability of each model being best is used to construct a model
-  weight.
-\item
-  A combination forecast is produced using these weights.
-\item
-  \alert{Came second in the M4 forecasting competition}
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{\fontsize{15}{15}\sffamily\bfseries FFORMA: Feature-based FORecast Model Averaging}
-\protect\hypertarget{section-2}{}
-
-\begin{block}{Models included}
-
-\begin{enumerate}
-\tightlist
-\item
-  Naive
-\item
-  Seasonal naive
-\item
-  Random walk with drift
-\item
-  Theta method
-\item
-  ARIMA
-\item
-  ETS
-\item
-  TBATS
-\item
-  STLM-AR
-\end{enumerate}
-
-\end{block}
-
-\end{frame}
-
-\begin{frame}{R Packages}
-\protect\hypertarget{r-packages}{}
-
-\fontsize{14.5}{19}\sf
-
-\begin{itemize}
-\item
-  \alert{seer}: FFORMS --- selecting forecasting model using features.
-  \newline\url{github.com/thiyangt/seer}\vspace*{0.5cm}
-\item
-  \alert{M4metalearning}: FFORMA -- forecast combinations using features
-  to choose weights. \newline\url{github.com/robjhyndman/M4metalearning}
-\end{itemize}
-
-\end{frame}
-
 \hypertarget{anomaly-detection}{%
 \section{Anomaly detection}\label{anomaly-detection}}
 
@@ -864,6 +694,178 @@ clip=true,trim=40 0 0 0]{yahoodata3}}}
 \item
   \alert{anomalous}: yahoo data.
   \newline\url{github.com/robjhyndman/anomalous}
+\end{itemize}
+
+\end{frame}
+
+\hypertarget{forecasting}{%
+\section{Forecasting}\label{forecasting}}
+
+\begin{frame}{Forecast model selection}
+\protect\hypertarget{forecast-model-selection}{}
+
+\alert{Features used to select a forecasting model}\vspace*{10cm}
+
+\begin{textblock}{12}(0.1,2.1)\small
+\begin{multicols}{2}
+  \begin{itemize}\tightlist
+    \item length
+    \item strength of seasonality
+    \item strength of trend
+    \item linearity
+    \item curvature
+    \item spikiness
+    \item stability
+    \item lumpiness
+    \item first ACF value of remainder series
+    \item parameter estimates of Holt's linear trend method
+    \item spectral entropy
+    \item Hurst exponent
+    \item nonlinearity
+    \item parameter estimates of Holt-Winters' additive method
+    \item unit root test statistics
+    \item first ACF value of residual series of linear trend model
+    \item ACF and PACF based features - calculated on both the raw and differenced series
+    \end{itemize}
+\end{multicols}
+\end{textblock}
+
+\end{frame}
+
+\begin{frame}{\fontsize{16}{16}\bf\sffamily FFORMS: Feature-based FORecast Model Selection}
+\protect\hypertarget{section}{}
+
+\only<1>{\full{fw1}}
+\only<2>{\full{fw2}}
+\only<3>{\full{fw3}}
+\only<4>{\full{fw4}}
+\only<5>{\full{fw5}}
+\only<6>{\full{fw6}}
+\only<7>{\full{fw7}}
+\only<8>{\full{fw8}}
+\only<9>{\full{fw9}}
+\only<10>{\full{fw10}}
+\only<11>{\full{fw11}}
+\only<12>{\full{fw12}}
+\only<13>{\full{fw13}}
+\only<14>{\full{fw14}}
+
+\vspace*{10cm}
+
+\end{frame}
+
+\begin{frame}{Application to M competition data}
+\protect\hypertarget{application-to-m-competition-data}{}
+
+\begin{block}{Experiment 1}
+\centering\small\tabcolsep=0.1cm
+\begin{tabular}{lrrrrr}
+                 & Source & Y      & Q      & M \\
+\midrule
+Observed series  & M1     & 181    & 203    & 617 \\
+Simulated series &        & 362000 & 406000 & 123400 \\
+New series       & M3     & 645    & 756    & 1428
+\end{tabular}
+\end{block}
+\begin{block}{Experiment 2}
+\centering\small\tabcolsep=0.1cm
+\begin{tabular}{lrrrrr}
+                 & Source & Y       & Q       & M \\
+\midrule
+Observed series  & M3     & 645     & 756     & 1428 \\
+Simulated series &        & 1290000 & 1512000 & 285600 \\
+New series       & M1     & 181     & 203     & 617
+\end{tabular}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Results: Yearly}
+\protect\hypertarget{results-yearly}{}
+
+\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-1-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Results: Quarterly}
+\protect\hypertarget{results-quarterly}{}
+
+\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-2-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Results: Monthly}
+\protect\hypertarget{results-monthly}{}
+
+\includegraphics{highdimts_files/figure-beamer/unnamed-chunk-3-1.pdf}
+
+\end{frame}
+
+\begin{frame}{\fontsize{15}{15}\sffamily\bfseries FFORMA: Feature-based FORecast Model Averaging}
+\protect\hypertarget{section-1}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Like FFORMS but we use gradient boosted trees rather than a random
+  forest.
+\item
+  The optimization criterion is forecast accuracy not classification
+  accuracy.
+\item
+  The probability of each model being best is used to construct a model
+  weight.
+\item
+  A combination forecast is produced using these weights.
+\item
+  \alert{Came second in the M4 forecasting competition}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{\fontsize{15}{15}\sffamily\bfseries FFORMA: Feature-based FORecast Model Averaging}
+\protect\hypertarget{section-2}{}
+
+\begin{block}{Models included}
+
+\begin{enumerate}
+\tightlist
+\item
+  Naive
+\item
+  Seasonal naive
+\item
+  Random walk with drift
+\item
+  Theta method
+\item
+  ARIMA
+\item
+  ETS
+\item
+  TBATS
+\item
+  STLM-AR
+\item
+  NNAR
+\end{enumerate}
+
+\end{block}
+
+\end{frame}
+
+\begin{frame}{R Packages}
+\protect\hypertarget{r-packages}{}
+
+\fontsize{14.5}{19}\sf
+
+\begin{itemize}
+\item
+  \alert{seer}: FFORMS --- selecting forecasting model using features.
+  \newline\url{github.com/thiyangt/seer}\vspace*{0.5cm}
+\item
+  \alert{M4metalearning}: FFORMA -- forecast combinations using features
+  to choose weights. \newline\url{github.com/robjhyndman/M4metalearning}
 \end{itemize}
 
 \end{frame}
@@ -1040,7 +1042,7 @@ that can be grouped together in a number of non-hierarchical ways.
 \item
   Forecast all series at all levels of aggregation using an automatic
   forecasting algorithm.\newline (e.g., \texttt{ets},
-  \texttt{auto.arima}, \ldots{})
+  \texttt{auto.arima}, FFORMA, \ldots{})
 \item
   Reconcile the resulting forecasts so they add up correctly using least
   squares optimization (i.e., find closest reconciled forecasts to the
@@ -1102,10 +1104,10 @@ where
 
 \only<2->{\begin{textblock}{6.3}(6,1)\small
 \begin{itemize}\itemsep=0cm\parskip=0cm
-\item[ $ y_{t}: $] observed aggregate of all series at time
+\item[\color{white} $ y_{t}: $] observed aggregate of all series at time
 $t$.
-\item[ $ y_{X,t}: $] observation on series $X$ at time $t$.
-\item[ $ \bm{b}_{t}: $] vector of all series at bottom level
+\item[\color{white} $ y_{X,t}: $] observation on series $X$ at time $t$.
+\item[\color{white} $ \bm{b}_{t}: $] vector of all series at bottom level
 in time $t$.
 \end{itemize}
 \end{textblock}}\vspace*{0.6cm}
